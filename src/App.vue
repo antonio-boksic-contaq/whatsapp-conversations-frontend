@@ -1,27 +1,10 @@
 <template>
   <div :class="containerClass" @click="onWrapperClick">
-    <AppTopBar @menu-toggle="onMenuToggle" v-if="authStore.isLoggedIn" />
-    <div
-      class="layout-sidebar"
-      @click="onSidebarClick"
-      v-if="authStore.isLoggedIn">
-      <AppMenu :model="menu" @menuitem-click="onMenuItemClick" />
-    </div>
-
-    <div
-      :class="[
-        !authStore.isLoggedIn ? 'm-0 p-0' : '',
-        'layout-main-container',
-      ]">
-      <div
-        :class="[
-          !authStore.isLoggedIn
-            ? 'flex h-full w-full items-center justify-center'
-            : '',
-          'layout-main',
-        ]">
-        <router-view />
-      </div>
+    <AppTopBar @menu-toggle="onMenuToggle" />
+  </div>
+  <div class="pt-28 px-20">
+    <div class="layout-main">
+      <router-view />
     </div>
   </div>
 </template>
@@ -29,7 +12,6 @@
 <script>
 import { computed, onBeforeMount, ref } from "vue";
 import AppTopBar from "@/components/menu/AppTopbar.vue";
-import AppMenu from "@/components/menu/AppMenu.vue";
 // import DefaultMenu from "./service/DefaultMenu";
 import Menu from "@/service/Menu";
 import { useAuthStore } from "@/store/auth";
@@ -38,7 +20,6 @@ import { useSettingStore } from "@/store/settings";
 export default {
   components: {
     AppTopBar: AppTopBar,
-    AppMenu: AppMenu,
   },
   setup() {
     const layoutMode = ref("static");

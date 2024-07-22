@@ -11,7 +11,8 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit",
-    "compile:sass": "sass --style compressed src/assets/sass/main.scss src/assets/style.css -w"
+    "compile:sass": "sass --style compressed src/assets/sass/main.scss src/assets/style.css -w",
+    "watch:tailwind": "tailwindcss -i ./src/assets/tailwind/input.css -o ./src/assets/tailwind.css --watch"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
