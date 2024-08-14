@@ -1,6 +1,6 @@
 module.exports = {
-  publicPath: process.env.NODE_ENV === "production" ? "/hr" : "/",
+  publicPath: process.env.NODE_ENV === "production" ? "/whatsapp" : "/",
   devServer: {
-    proxy: "http://localhost:8081",
+    proxy: "https://192.168.10.230",
   },
 };
