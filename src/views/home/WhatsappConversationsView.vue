@@ -1,5 +1,22 @@
 <template>
   <loading />
+  <!-- PARTE LOGIN -->
+  <div
+    class="grid grid-cols-5 h-auto gap-7 mx-0 mb-5 items-center bg-gray-200 p-2">
+    <div class="col-start-1 flex justify-around text-xl font-bold p-2">
+      <div>Login Operatore:</div>
+      <div>{{ identity }}</div>
+    </div>
+    <div class="col-start-5 text-right">
+      <Button
+        @click="changeIdentity"
+        class="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded">
+        Cambia login utente
+      </Button>
+    </div>
+  </div>
+
+  <!-- PARTE PRINCIPALE -->
   <div class="grid grid-cols-5 gap-7 mx-0 mb-10 h-[80vh] overflow-hidden">
     <!-- PARTE SINISTRA -->
     <div
@@ -12,7 +29,7 @@
     </div>
     <!-- PARTE DESTRA -->
     <div
-      class="col-start-2 col-end-6 p-4 border border-gray-300 rounded flex flex-col h-full overflow-hidden">
+      class="col-start-2 col-end-6 p-4 border border-gray-300 rounded flex flex-col h-full overflow-hidden bg-gray-200">
       <div v-if="selectedConversation" class="flex flex-col h-full">
         <h2
           class="text-3xl text-center font-bold mb-4 border-b border-gray-300 p-4 text-black">
@@ -36,7 +53,7 @@
           <li
             v-for="message in [...selectedConversation.messages].reverse()"
             :key="message.sid"
-            :class="messageClass(message)"
+            :class="messageClass(selectedConversation, message)"
             class="mb-2 p-2 rounded w-1/2">
             <div>
               {{ message.body }}
@@ -91,6 +108,8 @@ import { isOlderThan24Hours } from "@/utils/conversationChecks.js";
 import { Client } from "@twilio/conversations";
 import { useLoadingStore } from "@/store/loadings";
 import { formatDateForMsg } from "@/utils/date.js";
+import { useIdentityStore } from "@/store/identity.js";
+import { useRouter } from "vue-router";
 
 export default {
   name: "WhatsappConversationsView",
@@ -101,12 +120,15 @@ export default {
   setup() {
     const apiStore = useApiStore();
     const loadingStore = useLoadingStore();
+    const identityStore = useIdentityStore();
+    const router = useRouter();
 
     const conversations = ref([]);
     const selectedConversation = ref(null);
     const newMessage = ref("");
     const myPhoneNumber = "whatsapp:+393399951509";
-    const identity = "operatore_frontend";
+    // todo gestire identity dinamiche (sarebbe login operatore)
+    const identity = ref(identityStore.identity);
     const token = ref("");
     const client = ref(null);
 
@@ -115,7 +137,7 @@ export default {
         process.env.VUE_APP_API_URL +
         "/generate-token" +
         "?identity=" +
-        identity;
+        identity.value;
       const response = await apiStore.fetch(url);
       token.value = response;
     };
@@ -146,12 +168,17 @@ export default {
 
     const getConversations = async () => {
       const convs = await client.value.getSubscribedConversations();
+      if (!convs.items.length > 0) {
+        console.log("provaprova");
+        return;
+      }
 
       const friendlyNames = convs.items.map(
         (conversation) => conversation.friendlyName
       );
 
       const idListe = await getidListaForFriendlyNames(friendlyNames);
+      //console.log("idliste", idListe);
 
       const idListaLookup = idListe.reduce((acc, item) => {
         acc[item.friendlyName] = item.idLista;
@@ -191,6 +218,7 @@ export default {
       );
 
       conversations.value = convsWithDetails;
+      console.log("CONVERSATIONS", conversations);
     };
 
     const getidListaForFriendlyNames = async (friendlyNamesArray) => {
@@ -205,6 +233,7 @@ export default {
 
     const selectConversation = (conversation) => {
       selectedConversation.value = conversation;
+      console.log(selectedConversation.value);
       // console.log(
       //   "NELL EMIT DEL PADRE Selected conversation:",
       //   selectedConversation.value
@@ -224,10 +253,10 @@ export default {
       }
     };
 
-    const messageClass = (message) => {
-      return message.author === myPhoneNumber || message.author === identity
-        ? "sent-message"
-        : "received-message";
+    const messageClass = (selectedConversation, message) => {
+      return message.author.includes(selectedConversation.friendlyName)
+        ? "received-message"
+        : "sent-message";
     };
 
     onBeforeMount(async () => {
@@ -242,6 +271,10 @@ export default {
     const loadMessages = async (conversation) => {
       const messages = await conversation.getMessages();
       selectedConversation.value.messages = messages.items;
+    };
+
+    const changeIdentity = () => {
+      router.push({ name: "whatsapp-login" });
     };
 
     return {
@@ -259,6 +292,7 @@ export default {
       loadingStore,
       getidListaForFriendlyNames,
       formatDateForMsg,
+      changeIdentity,
     };
   },
 };

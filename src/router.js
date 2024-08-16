@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 // import { useAuthStore } from "@/store/auth";
+import { useIdentityStore } from "@/store/identity.js";
 
 const routes = [
   // CUSTOM PAGES
@@ -26,6 +27,11 @@ const routes = [
     },
   },
   {
+    path: "/whatsapp-login",
+    name: "whatsapp-login",
+    component: () => import("@/views/auth/WhatsappLogin.vue"),
+  },
+  {
     path: "/conversazioni-whatsapp",
     name: "conversazioni-whatsapp",
     component: () => import("@/views/home/WhatsappConversationsView.vue"),
@@ -33,6 +39,7 @@ const routes = [
       authRequired: false,
       roles: [],
       title: "Conversazioni Whatsapp",
+      whatsappIdentityRequired: true,
     },
   },
   {
@@ -70,15 +77,24 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  const identityStore = useIdentityStore();
   // const authStore = useAuthStore();
   document.title = "ContaQ CRM - " + to.meta.title;
-  if (to.meta.authRequired === true) {
-    // if (authStore.isLoggedIn === false) router.push("/");
-    // if (to.meta.roles.includes(authStore.user.role)) return next();
-    router.push("/non-autorizzato");
-  } else {
-    return next();
+  //if (to.meta.authRequired === true) {
+  // if (authStore.isLoggedIn === false) router.push("/");
+  // if (to.meta.roles.includes(authStore.user.role)) return next();
+  // router.push("/non-autorizzato");
+  //} else {
+  //return next();
+  //}
+
+  if (to.meta.whatsappIdentityRequired === true) {
+    if (!identityStore.identity) {
+      return next({ name: "whatsapp-login" });
+    }
   }
+
+  return next();
 });
 
 export default router;
