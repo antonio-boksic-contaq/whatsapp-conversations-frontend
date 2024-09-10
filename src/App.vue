@@ -131,3 +131,29 @@ export default {
   },
 };
 </script>
+
+<style>
+.expired-conv {
+  background-color: rgb(254 202 202) !important;
+}
+/* 254 202 202 */
+.appointment-conv {
+  background-color: rgb(121, 161, 255) !important;
+}
+
+.closed-conv {
+  background-color: rgb(121, 255, 177) !important;
+}
+
+.inherit-bg {
+  background-color: inherit;
+}
+
+.selected {
+  filter: brightness(80%) !important;
+}
+
+:hover.scurisci-hover {
+  filter: brightness(85%) /*!important*/; /* qua posso levare !important se non voglio applicare hover su conversazione selezionata*/
+}
+</style>

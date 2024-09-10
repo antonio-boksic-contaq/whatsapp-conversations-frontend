@@ -1,7 +1,8 @@
 <template>
   <v-select
+    class="scrollable-dropdown"
     v-model="selectedValue"
-    :reduce="(element) => element.id"
+    :reduce="(element) => element.orarioAppuntamento"
     :options="options"
     :multiple="multiple"
     :label="labelField"
@@ -49,6 +50,7 @@ export default {
   emits: ["selectedValueChange"],
   setup(props, context) {
     const selectedValue = ref(props.value);
+    console.log("Initial selected value:", props.value); // Aggiungi un log per verificare il valore iniziale
     const optionValues = ref([]);
     const hiddenSelectOptions = ref([]);
     const placeholderValue = () => {
@@ -81,15 +83,16 @@ export default {
       (value) => (selectedValue.value = value)
     );
 
-    watch(selectedValue, (selectedValue, oldValue) => {
+    watch(selectedValue, (newValue, oldValue) => {
+      console.log("Selected value changed:", newValue); // Aggiungi questo log per debug
       if (
-        selectedValue != oldValue &&
-        ((selectedValue !== null && String(selectedValue).length > 0) ||
+        newValue != oldValue &&
+        ((newValue !== null && String(newValue).length > 0) ||
           (oldValue !== null && String(oldValue).length > 0))
       ) {
         if (props.doubleEmit !== undefined)
-          context.emit("selectedValueChange", { oldValue, selectedValue });
-        else context.emit("selectedValueChange", selectedValue);
+          context.emit("selectedValueChange", { oldValue, newValue });
+        else context.emit("selectedValueChange", newValue); // Qui dovresti vedere il valore
       }
     });
 
@@ -125,3 +128,9 @@ export default {
   },
 };
 </script>
+<style>
+.scrollable-dropdown .vs__dropdown-menu {
+  max-height: 105px; /* Limita l'altezza massima del menu */
+  overflow-y: auto; /* Aggiunge lo scroll verticale */
+}
+</style>

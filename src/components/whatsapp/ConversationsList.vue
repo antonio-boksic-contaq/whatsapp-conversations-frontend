@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col">
+  <div class="h-full flex flex-col inherit-bg">
     <!-- Filtro -->
     <div class="mb-4 p-2 border border-gray-300 bg-white rounded-xl">
       <input
@@ -9,70 +9,77 @@
         class="p-2 border rounded w-full" />
     </div>
     <!-- Lista delle conversazioni -->
-    <ul class="flex-grow overflow-y-auto">
+    <ul class="flex-grow overflow-y-auto inherit-bg">
       <li
         v-for="conversation in filteredConversations"
         :key="conversation.id"
         @click="selectConversation(conversation)"
-        class="cursor-pointer hover:bg-gray-300 p-2 rounded-xl m-1 border border-gray-400"
-        :class="{
-          'bg-gray-400':
-            selectedConversation &&
-            selectedConversation.sid === conversation.sid,
-          'bg-red-200': isOlderThan24Hours(conversation),
-        }">
-        <!-- friendly name e idLista -->
-        <div class="mb-2 text-xl">
-          <!-- Nome sopra tutto -->
-          <div class="text-center">
-            {{ conversation.nominativo }}
+        :class="[
+          'scurisci-hover',
+          'rounded-xl',
+          'cursor-pointer',
+          'p-2',
+          'm-1',
+          'border',
+          'border-gray-400',
+          getConversationClass(conversation),
+        ]">
+        <!-- --------------------------------------------------------------------------------- -->
+        <div v-if="conversation.stato <= 1">
+          <!-- friendly name e idLista -->
+          <div class="mb-2 text-xl">
+            <!-- Nome sopra tutto -->
+            <div class="text-center">
+              {{ conversation.nominativo }}
+              <span
+                v-if="hasUnreadMessages(conversation)"
+                class="text-red-500 pl-2">
+                ●
+              </span>
+            </div>
+
+            <!-- FriendlyName e idLista sotto, con la notifica sulla destra -->
+            <div class="text-center">
+              <span>
+                {{
+                  conversation.friendlyName +
+                  " ( idLista: " +
+                  conversation.idLista +
+                  " )"
+                }}
+              </span>
+            </div>
+          </div>
+          <!-- info ultimo messaggio -->
+          <div v-if="conversation.messages.length" class="truncate">
             <span
-              v-if="hasUnreadMessages(conversation)"
-              class="text-red-500 pl-2">
-              ●
+              v-if="
+                conversation.messages[
+                  conversation.messages.length - 1
+                ].author.includes(conversation.friendlyName)
+              ">
+              {{ conversation.friendlyName + ": " }}
             </span>
-          </div>
+            <span v-else> Tu: </span>
 
-          <!-- FriendlyName e idLista sotto, con la notifica sulla destra -->
-          <div class="text-center">
-            <span>
-              {{
-                conversation.friendlyName +
-                " ( idLista: " +
-                conversation.idLista +
-                " )"
-              }}
-            </span>
+            <strong>
+              {{ conversation.messages[conversation.messages.length - 1].body }}
+            </strong>
+          </div>
+          <div v-else>
+            <em>No messages</em>
+          </div>
+          <!-- data -->
+          <div>
+            {{
+              formatDateForMsg(
+                conversation.messages[conversation.messages.length - 1]
+                  .dateCreated
+              )
+            }}
           </div>
         </div>
-        <!-- info ultimo messaggio -->
-        <div v-if="conversation.messages.length" class="truncate">
-          <span
-            v-if="
-              conversation.messages[
-                conversation.messages.length - 1
-              ].author.includes(conversation.friendlyName)
-            ">
-            {{ conversation.friendlyName + ": " }}
-          </span>
-          <span v-else> Tu: </span>
-
-          <strong>
-            {{ conversation.messages[conversation.messages.length - 1].body }}
-          </strong>
-        </div>
-        <div v-else>
-          <em>No messages</em>
-        </div>
-        <!-- data -->
-        <div>
-          {{
-            formatDateForMsg(
-              conversation.messages[conversation.messages.length - 1]
-                .dateCreated
-            )
-          }}
-        </div>
+        <!-- --------------------------------------------------------------------------------- -->
       </li>
     </ul>
   </div>
@@ -181,6 +188,28 @@ export default {
       }
     );
 
+    const getConversationClass = (conversation) => {
+      let baseClass = "";
+      if (conversation.stato === 1) {
+        baseClass = "closed-conv";
+      } else if (conversation.esito === "APPUNTAMENTO") {
+        baseClass = "appointment-conv";
+      } else if (isOlderThan24Hours(conversation)) {
+        baseClass = "expired-conv";
+      } else {
+        baseClass = "inherit-bg";
+      }
+
+      if (
+        selectedConversation.value &&
+        selectedConversation.value.sid === conversation.sid
+      ) {
+        return `${baseClass} selected`; // Scurisce il colore di base del 20%
+      }
+
+      return baseClass;
+    };
+
     return {
       filter,
       filteredConversations,
@@ -188,6 +217,7 @@ export default {
       isOlderThan24Hours,
       formatDateForMsg,
       hasUnreadMessages,
+      getConversationClass,
     };
   },
 };

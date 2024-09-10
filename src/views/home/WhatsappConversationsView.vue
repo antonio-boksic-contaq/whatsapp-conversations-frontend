@@ -2,7 +2,7 @@
   <loading />
   <!-- PARTE LOGIN -->
   <div
-    class="grid grid-cols-5 h-auto gap-7 mx-0 mb-5 items-center bg-gray-200 p-2">
+    class="grid grid-cols-5 h-auto gap-7 mx-0 mb-5 items-center bg-gray-300 border border-gray-400 p-2 rounded-xl">
     <div class="col-start-1 flex justify-around text-xl font-bold p-2">
       <div>Login Operatore:</div>
       <div>{{ identity }}</div>
@@ -12,6 +12,7 @@
         @click="changeIdentity"
         class="p-2 bg-blue-500 hover:bg-blue-600 text-white p-button-rounded">
         Cambia login utente
+        <font-awesome-icon class="mx-2" :icon="['fas', 'user']" />
       </Button>
     </div>
   </div>
@@ -20,47 +21,84 @@
   <div class="grid grid-cols-5 gap-7 mx-0 mb-10 h-[80vh] overflow-hidden">
     <!-- PARTE SINISTRA -->
     <div
-      class="col-start-1 bg-gray-200 rounded p-2 overflow-y-auto h-full border border-gray-300">
-      <conversations-list
-        :conversations="conversations"
-        :identity="identity"
-        :selectedConversation="selectedConversation"
-        @conversationSelected="selectConversation"
-        @getConvs="getConversations">
-      </conversations-list>
+      class="col-start-1 rounded-xl p-2 h-full border border-gray-400 flex flex-col bg-gray-300">
+      <!-- Lista delle conversazioni -->
+      <div
+        class="flex-grow h-[300px] overflow-y-auto rounded-xl border border-gray-400 bg-gray-300 p-2">
+        <conversations-list
+          :conversations="conversations"
+          :identity="identity"
+          :selectedConversation="selectedConversation"
+          @conversationSelected="selectConversation"
+          @getConvs="getConversations">
+        </conversations-list>
+      </div>
+
+      <!-- Legenda-->
+      <div class="p-4 mb-2 rounded-xl border border-gray-400 bg-gray-300 mt-2">
+        <div class="text-center">Legenda colori conversazioni:</div>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
+          <div
+            class="bg-gray-300 border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            aperta
+          </div>
+          <div
+            class="appointment-conv border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            appuntamento
+          </div>
+          <div
+            class="expired-conv border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            scaduta
+          </div>
+          <div
+            class="closed-conv border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            chiusa
+          </div>
+        </div>
+      </div>
     </div>
     <!-- PARTE DESTRA -->
     <div
-      class="col-start-2 col-end-6 p-4 border border-gray-300 rounded flex flex-col h-full overflow-hidden bg-gray-200">
+      class="col-start-2 col-end-6 p-4 border border-gray-400 rounded-xl flex flex-col h-full overflow-hidden bg-gray-300">
       <div v-if="selectedConversation" class="flex flex-col h-full">
-        <h2
-          class="text-3xl text-center font-bold mb-4 border-b border-gray-300 p-4 text-black">
-          {{
-            "numero: " +
-            selectedConversation.friendlyName +
-            " - idLista: " +
-            selectedConversation.idLista +
-            " - nominativo: " +
-            selectedConversation.nominativo
-          }}
-          <!-- lista di partecipanti alla conversazione -->
-          <!-- <div
-            v-for="participant in selectedConversation.participants"
-            :key="participant.sid">
-            {{
-              participant.identity
-                ? participant.identity
-                : participant.bindings.whatsapp.address
-            }}
-          </div> -->
-        </h2>
+        <!-- intestazione conversazione selezionata -->
+        <div
+          class="intestazioneconversazione flex items-center justify-between mb-4 border-b border-gray-500 p-4">
+          <!-- Primo div centrato -->
+          <div class="primodiv flex-1 text-center">
+            <h2 class="text-3xl font-bold text-black">
+              {{
+                "numero: " +
+                selectedConversation.friendlyName +
+                " - idLista: " +
+                selectedConversation.idLista +
+                " - nominativo: " +
+                selectedConversation.nominativo
+              }}
+            </h2>
+          </div>
+
+          <!-- Bottone sulla destra -->
+          <div class="secondodiv">
+            <!-- <button
+              class="bg-green-500 hover:bg-green-600 text-white p-2 rounded text-xl"
+              @click="openModal(selectedConversation)">
+              Fissa Appuntamento
+              <font-awesome-icon
+                class="mx-2"
+                :icon="['fas', 'calendar-plus']" />
+            </button> -->
+            <!-- ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded -->
+          </div>
+        </div>
+
         <!-- lista dei messaggi -->
         <ul class="flex-grow overflow-y-auto mb-4 flex flex-col-reverse">
           <li
             v-for="message in [...selectedConversation.messages].reverse()"
             :key="message.sid"
             :class="messageClass(selectedConversation, message)"
-            class="mb-2 p-2 rounded w-1/2">
+            class="mb-2 p-2 rounded-2xl w-fit msgWidth">
             <div>
               {{ message.body }}
             </div>
@@ -94,7 +132,7 @@
         <!-- input per nuovi messaggi -->
         <div
           v-if="!isOlderThan24Hours(selectedConversation)"
-          class="border-t border-gray-300 bg-white p-4">
+          class="border-t border-gray-300 bg-white p-4 rounded-xl">
           <div class="flex">
             <input
               type="text"
@@ -122,12 +160,19 @@
       </div>
     </div>
   </div>
+  <whatsapp-conversations-modal
+    :url="url"
+    :customers="uniqueCustomers"
+    @emptyTable="emptyRows"
+    @fetchData="loadData"
+    :rows="rows" />
 </template>
 
 <script>
 import { ref, onBeforeMount } from "vue";
 import { useApiStore } from "@/store/api";
 import ConversationsList from "@/components/whatsapp/ConversationsList.vue";
+import WhatsappConversationsModal from "@/components/modals/WhatsappConversationsModal.vue";
 import Loading from "@/components/shared/Loading.vue";
 import { isOlderThan24Hours } from "@/utils/conversationChecks.js";
 import { Client } from "@twilio/conversations";
@@ -135,12 +180,15 @@ import { useLoadingStore } from "@/store/loadings";
 import { formatDateForMsg } from "@/utils/date.js";
 import { useIdentityStore } from "@/store/identity.js";
 import { useRouter } from "vue-router";
+import { useModalStore } from "@/store/modals";
+import { useFormStore } from "@/store/forms";
 
 export default {
   name: "WhatsappConversationsView",
   components: {
     ConversationsList,
     Loading,
+    WhatsappConversationsModal,
   },
   setup() {
     const apiStore = useApiStore();
@@ -156,6 +204,8 @@ export default {
     const identity = ref(identityStore.identity);
     const token = ref("");
     const client = ref(null);
+    const modalStore = useModalStore();
+    const formStore = useFormStore();
 
     const getToken = async () => {
       const url =
@@ -333,12 +383,23 @@ export default {
         return acc;
       }, {});
 
-      const NominativoLookup = idListe.reduce((acc, item) => {
+      const nominativoLookup = idListe.reduce((acc, item) => {
         acc[item.friendlyName] = item.nominativo;
         return acc;
       }, {});
 
-      console.log("nominativolookup", NominativoLookup);
+      const statoLookup = idListe.reduce((acc, item) => {
+        acc[item.friendlyName] = item.stato;
+        return acc;
+      }, {});
+
+      const esitoLookup = idListe.reduce((acc, item) => {
+        acc[item.friendlyName] = item.esito;
+        return acc;
+      }, {});
+
+      console.log("nominativolookup", nominativoLookup);
+      console.log("statolookup", statoLookup);
 
       const convsWithDetails = await Promise.all(
         conversationsToHandle.map(async (conversation) => {
@@ -368,16 +429,47 @@ export default {
           conversation.idLista =
             idListaLookup[conversation.friendlyName] || null;
           conversation.nominativo =
-            NominativoLookup[conversation.friendlyName] || null;
+            nominativoLookup[conversation.friendlyName] || null;
+          conversation.stato = statoLookup[conversation.friendlyName]; //levato || null perchè lo 0 lo faceva diventare null
+          conversation.esito = esitoLookup[conversation.friendlyName] || null;
 
           return conversation;
         })
       );
+
+      console.log("convwithdetails", convsWithDetails);
       if (justOneConv) {
         conversations.value.push(convsWithDetails[0]);
       } else {
         conversations.value = convsWithDetails;
       }
+    };
+
+    const openModal = async (selectedConv) => {
+      // console.log(
+      //   "identity",
+      //   identity.value,
+      //   "conv.idLista",
+      //   selectedConv.idLista
+      // );
+
+      modalStore.open(
+        `appuntamento per idLista: ${selectedConv.idLista}`,
+        "aggiungi"
+      );
+
+      const url = process.env.VUE_APP_API_URL + "/schedule-appointment";
+      formStore.fill("add", url);
+      formStore.formToShow = "whatever";
+      modalStore.modalToShow = "appointment";
+      formStore.data = {
+        ...selectedConv,
+        login: identityStore.identity,
+      };
+
+      // modalStore.open(title, "detail");
+      // formStore.formToShow = content;
+      // modalStore.modalToShow = "recap";
     };
 
     return {
@@ -399,6 +491,7 @@ export default {
       addLinkToNewMessage,
       getConversations,
       loggedInParticipant,
+      openModal,
     };
   },
 };
@@ -407,9 +500,18 @@ export default {
 <style>
 .sent-message {
   background-color: #c6f8c9;
+  /*background-color: #005c4b;*/
+  /* color: white; */
+  margin-left: auto;
 }
 .received-message {
   background-color: #d2d2d2;
-  margin-left: auto;
+  /* color: white; */
+  /*background-color: #202c33;*/
+}
+
+.msgWidth {
+  min-width: 15%;
+  max-width: 60%;
 }
 </style>
