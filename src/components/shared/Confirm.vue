@@ -66,9 +66,14 @@ export default {
         await apiStore.update(confirmStore.route, new FormData());
       if (confirmStore.type === "delete")
         await apiStore.delete(confirmStore.route, confirmStore.itemId);
+      if (confirmStore.type === "non-interessato")
+        var formData = new FormData();
+      formData.append("idLista", confirmStore.itemId);
+      await apiStore.update(confirmStore.route, formData);
       apiStore.isLoading = true;
-      context.emit("emptyTable", true);
+      //context.emit("emptyTable", true);
       if (props.preventFetch === undefined) {
+        if (confirmStore.type === "non-interessato") return;
         if (props.fetchUrl !== undefined) {
           const response = await apiStore.fetch(
             props.fetchUrl,

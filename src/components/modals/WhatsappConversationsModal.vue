@@ -1,9 +1,8 @@
 <template>
   <Modal size="modal-xl">
     <template #content>
-      <whatsapp-conversations-form
-        :url="url"
-        v-if="formStore.formToShow != null"
+      <schedule-appointment-form
+        v-if="formStore.formToShow === 'appuntamento'"
         @emptyTable="emptyTable"
         @fetchData="fetchData($event)" />
     </template>
@@ -11,15 +10,15 @@
 </template>
 <script>
 import Modal from "@/components/shared/Modal.vue";
-import WhatsappConversationsForm from "@/components/forms/WhatsappConversationsForm.vue";
+import scheduleAppointmentForm from "@/components/forms/ScheduleAppointmentForm.vue";
 import { useFormStore } from "@/store/forms";
 
 export default {
   name: "WhatsappConversationsModal",
-  props: ["url"],
+  props: [],
   emits: ["emptyTable", "fetchData"],
   components: {
-    WhatsappConversationsForm,
+    scheduleAppointmentForm,
     Modal,
   },
   setup(props, context) {
@@ -30,6 +29,7 @@ export default {
     };
 
     const fetchData = (event) => {
+      console.log("emit nella modale");
       context.emit("fetchData", event);
     };
 

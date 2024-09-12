@@ -95,9 +95,9 @@ import ValidationError from "@/components/shared/ValidationError";
 import VueSelect from "@/components/shared/VueSelect";
 
 export default {
-  name: "TaskForm",
+  name: "WhatsappConversationForm",
   components: { Errors, ValidationError, VueSelect },
-  props: ["url"],
+  props: [],
   emits: ["emptyTable", "fetchData"],
   setup(props, context) {
     const apiStore = useApiStore();
@@ -137,15 +137,19 @@ export default {
       if (!validate) return;
       //vediamo se sono dentro alla store
       if (formStore.action === "store")
-        await apiStore.store(formStore.route, formStore.id + "FormId");
+        await apiStore.store(formStore.route, formStore.id + "FormId", false);
+      console.log("parte emit dal form");
+
       if (formStore.action === "update")
         await apiStore.update(formStore.route, formStore.id + "FormId");
 
       if (apiStore.success === true) {
-        context.emit("emptyTable", true);
+        console.log("qua ci entra????????????????????????????");
+        //context.emit("emptyTable", true);
         apiStore.isLoading = true;
-        const response = await apiStore.fetch(props.url, apiStore.params);
-        context.emit("fetchData", response);
+        //const response = await apiStore.fetch(props.url, apiStore.params);
+        context.emit("fetchData", true);
+        //context.emit("fetchData", response);
         formStore.empty();
       }
     };

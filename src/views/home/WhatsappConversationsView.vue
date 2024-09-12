@@ -63,9 +63,9 @@
       <div v-if="selectedConversation" class="flex flex-col h-full">
         <!-- intestazione conversazione selezionata -->
         <div
-          class="intestazioneconversazione flex items-center justify-between mb-4 border-b border-gray-500 p-4">
+          class="intestazioneconversazione mb-4 border-b border-gray-500 p-4">
           <!-- Primo div centrato -->
-          <div class="primodiv flex-1 text-center">
+          <div class="text-center">
             <h2 class="text-3xl font-bold text-black">
               {{
                 "numero: " +
@@ -78,17 +78,36 @@
             </h2>
           </div>
 
-          <!-- Bottone sulla destra -->
-          <div class="secondodiv">
-            <!-- <button
-              class="bg-green-500 hover:bg-green-600 text-white p-2 rounded text-xl"
-              @click="openModal(selectedConversation)">
-              Fissa Appuntamento
+          <!-- bottoni sotto intestazione -->
+          <div
+            v-if="
+              !(
+                selectedConversation.stato === 1 ||
+                selectedConversation.esito === 'APPUNTAMENTO' ||
+                isOlderThan24Hours(selectedConversation)
+              )
+            "
+            class="text-center mt-2 flex justify-center gap-3">
+            <button
+              class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-xl"
+              style="font-size: 1.4rem !important"
+              @click="openModal(selectedConversation, 'appuntamento')">
+              Fissa appuntamento
+
               <font-awesome-icon
                 class="mx-2"
                 :icon="['fas', 'calendar-plus']" />
-            </button> -->
-            <!-- ml-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded -->
+            </button>
+
+            <button
+              class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl"
+              style="font-size: 1.4rem !important"
+              @click="openConfirm(selectedConversation, 'conversazione')">
+              Non interessato
+              <font-awesome-icon
+                class="mx-2"
+                :icon="['fas', 'calendar-minus']" />
+            </button>
           </div>
         </div>
 
@@ -160,12 +179,8 @@
       </div>
     </div>
   </div>
-  <whatsapp-conversations-modal
-    :url="url"
-    :customers="uniqueCustomers"
-    @emptyTable="emptyRows"
-    @fetchData="loadData"
-    :rows="rows" />
+  <whatsapp-conversations-modal @fetchData="getConversations" />
+  <confirm></confirm>
 </template>
 
 <script>
@@ -182,6 +197,8 @@ import { useIdentityStore } from "@/store/identity.js";
 import { useRouter } from "vue-router";
 import { useModalStore } from "@/store/modals";
 import { useFormStore } from "@/store/forms";
+import { useConfirmStore } from "@/store/confirms";
+import Confirm from "@/components/shared/Confirm.vue";
 
 export default {
   name: "WhatsappConversationsView",
@@ -189,6 +206,7 @@ export default {
     ConversationsList,
     Loading,
     WhatsappConversationsModal,
+    Confirm,
   },
   setup() {
     const apiStore = useApiStore();
@@ -206,6 +224,7 @@ export default {
     const client = ref(null);
     const modalStore = useModalStore();
     const formStore = useFormStore();
+    const confirmStore = useConfirmStore();
 
     const getToken = async () => {
       const url =
@@ -263,22 +282,26 @@ export default {
     const loggedInParticipant = ref({});
 
     const getConversations = async () => {
+      console.log("emit chiama getconversations------------------------");
       //ottengo conversazioni non ordinate e a cui mancano dati
       const convs = await client.value.getSubscribedConversations();
       if (!convs.items.length > 0) {
-        console.log("provaprova");
         return;
       }
 
-      console.log("convs", convs);
+      console.log("convs prese da twilio ++++++++");
+
+      // console.log("convs", convs);
       //aggiungi idlista,nominativo,partecipanti,messaggi eccecc
       await addDataToConvs(convs);
+
+      console.log("aggiunto dati alle convs ///////////");
 
       // ordina cronologicamente le conversazioni in base a ultimo messaggio
       sortConversations();
 
       //conversations.value = convsWithDetails;
-      console.log("CONVERSATIONS", conversations.value);
+      // console.log("CONVERSATIONS", conversations.value);
       loggedInParticipant.value = conversations.value[0].participants.find(
         (participant) =>
           participant.state.identity === identity.value.toString()
@@ -310,6 +333,11 @@ export default {
       console.log("response", response);
       return response;
     };
+
+    // const deleteItem = (rowItem, itemText = null) => {
+    //   confirmStore.route = url;
+    //   confirmStore.open(rowItem, "delete", props.field, itemText);
+    // };
 
     const selectConversation = async (conversation) => {
       console.log("lunghezza", conversation.messages.length);
@@ -366,17 +394,17 @@ export default {
       ////Dato che uso map su conversationsTOHandle ho bisogno che questo sia sempre un array, se convs.items esiste non c'è problema, altrimenti avvolgiamo convs in un array
       const conversationsToHandle = convs.items ? convs.items : [convs];
 
-      console.log("conversationsToHandle", conversationsToHandle);
+      // console.log("conversationsToHandle", conversationsToHandle);
 
       const friendlyNames = conversationsToHandle.map(
         (conversation) => conversation.friendlyName
       );
 
-      console.log("FRIENDLY NAMES", friendlyNames);
+      // console.log("FRIENDLY NAMES", friendlyNames);
 
       //con numeri di telefono trovo idLista associati
       const idListe = await getInternalDataForConvs(friendlyNames);
-      console.log("idListe", idListe);
+      // console.log("idListe", idListe);
 
       const idListaLookup = idListe.reduce((acc, item) => {
         acc[item.friendlyName] = item.idLista;
@@ -398,8 +426,8 @@ export default {
         return acc;
       }, {});
 
-      console.log("nominativolookup", nominativoLookup);
-      console.log("statolookup", statoLookup);
+      // console.log("nominativolookup", nominativoLookup);
+      // console.log("statolookup", statoLookup);
 
       const convsWithDetails = await Promise.all(
         conversationsToHandle.map(async (conversation) => {
@@ -445,7 +473,12 @@ export default {
       }
     };
 
-    const openModal = async (selectedConv) => {
+    const urlScheduleAppointment =
+      process.env.VUE_APP_API_URL + "/schedule-appointment";
+
+    const urlNotInterested = process.env.VUE_APP_API_URL + "/not-interested";
+
+    const openModal = async (selectedConv, action) => {
       // console.log(
       //   "identity",
       //   identity.value,
@@ -453,23 +486,24 @@ export default {
       //   selectedConv.idLista
       // );
 
-      modalStore.open(
-        `appuntamento per idLista: ${selectedConv.idLista}`,
-        "aggiungi"
-      );
+      if (action === "appuntamento") {
+        modalStore.open(
+          `appuntamento per idLista: ${selectedConv.idLista}`,
+          "aggiungi"
+        );
+        formStore.fill("add", urlScheduleAppointment);
+        formStore.formToShow = action;
+        modalStore.modalToShow = "appointment";
+        formStore.data = {
+          ...selectedConv,
+          login: identityStore.identity,
+        };
+      }
+    };
 
-      const url = process.env.VUE_APP_API_URL + "/schedule-appointment";
-      formStore.fill("add", url);
-      formStore.formToShow = "whatever";
-      modalStore.modalToShow = "appointment";
-      formStore.data = {
-        ...selectedConv,
-        login: identityStore.identity,
-      };
-
-      // modalStore.open(title, "detail");
-      // formStore.formToShow = content;
-      // modalStore.modalToShow = "recap";
+    const openConfirm = (conversation, itemText = null) => {
+      confirmStore.route = urlNotInterested;
+      confirmStore.open(conversation, "non-interessato", "bo", itemText);
     };
 
     return {
@@ -492,6 +526,7 @@ export default {
       getConversations,
       loggedInParticipant,
       openModal,
+      openConfirm,
     };
   },
 };

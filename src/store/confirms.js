@@ -25,14 +25,17 @@ export const useConfirmStore = defineStore("confirms", {
       if (state.type === "update") return state.itemText;
       if (state.type === null)
         return "Sei sicuro di voler confermare l'operazione?";
+      if (state.type === null || state.type === "non-interessato")
+        return "Sei sicuro di voler confermare l'operazione?";
     },
   },
   actions: {
     async open(item, type, field, itemText = null) {
       if (itemText === null) this.itemText = await item.row[field];
       else this.itemText = itemText;
-      if (isNaN(item)) this.itemId = await item.row.id;
-      else this.itemId = item;
+      console.log("itemtext", this.itemText);
+      // if (isNaN(item)) this.itemId = await item.row.id;
+      // else this.itemId = item;
       if (type === "restore") {
         this.color = "warning";
         this.icon = "pi-undo";
@@ -45,6 +48,13 @@ export const useConfirmStore = defineStore("confirms", {
         this.color = "info";
         this.type = "update";
         this.title = itemText;
+      } else if (type === "non-interessato") {
+        this.color = "danger";
+        this.icon = "pi-times-circle";
+        this.type = "non-interessato";
+        this.itemId = item.idLista;
+        this.title =
+          "Esita come 'non interessato' " + "l'idLista: " + item.idLista;
       } else {
         this.color = "danger";
         this.icon = "pi-trash";
