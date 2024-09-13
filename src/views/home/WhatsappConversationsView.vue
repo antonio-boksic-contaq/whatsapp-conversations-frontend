@@ -282,14 +282,24 @@ export default {
     const loggedInParticipant = ref({});
 
     const getConversations = async () => {
-      console.log("emit chiama getconversations------------------------");
-      //ottengo conversazioni non ordinate e a cui mancano dati
-      const convs = await client.value.getSubscribedConversations();
+      //console.log("emit chiama getconversations------------------------");
+      //ottengo conversazioni non ordinate e a cui mancano dati, e ne ricevo solo 50 con getSubscrivedConversations(), quindi ho dovuto aggiungere logica del paginator
+      let convs = { items: [] }; // mantengo  la struttura convs.items come era prima di implementare paginator
+      let paginator = await client.value.getSubscribedConversations();
+
+      // Aggiungi le prime conversazioni a convs.items
+      convs.items.push(...paginator.items);
+
+      // Continua a ottenere pagine di conversazioni finché ci sono pagine successive
+      while (paginator.hasNextPage) {
+        paginator = await paginator.nextPage();
+        convs.items.push(...paginator.items);
+      }
       if (!convs.items.length > 0) {
         return;
       }
 
-      console.log("convs prese da twilio ++++++++");
+      console.log("convs prese da twilio ++++++++", convs.items);
 
       // console.log("convs", convs);
       //aggiungi idlista,nominativo,partecipanti,messaggi eccecc
@@ -393,6 +403,8 @@ export default {
       //se la conversazione è singola convs non avrà proprietà items, che nel caso di convs multiple contiene appunto gli oggetti delle conversazioni
       ////Dato che uso map su conversationsTOHandle ho bisogno che questo sia sempre un array, se convs.items esiste non c'è problema, altrimenti avvolgiamo convs in un array
       const conversationsToHandle = convs.items ? convs.items : [convs];
+
+      console.log("conversationstohandle", conversationsToHandle);
 
       // console.log("conversationsToHandle", conversationsToHandle);
 
