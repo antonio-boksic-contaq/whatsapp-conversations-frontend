@@ -114,7 +114,7 @@ export default {
     });
 
     const changeData = (event, field) => {
-      console.log("stochiamandochangedata", event, field);
+      // console.log("stochiamandochangedata", event, field);
       state[field] = event;
     };
 
@@ -138,13 +138,13 @@ export default {
       //vediamo se sono dentro alla store
       if (formStore.action === "store")
         await apiStore.store(formStore.route, formStore.id + "FormId", false);
-      console.log("parte emit dal form");
+      // console.log("parte emit dal form");
 
       if (formStore.action === "update")
         await apiStore.update(formStore.route, formStore.id + "FormId");
 
       if (apiStore.success === true) {
-        console.log("qua ci entra????????????????????????????");
+        //console.log("qua ci entra????????????????????????????");
         //context.emit("emptyTable", true);
         apiStore.isLoading = true;
         //const response = await apiStore.fetch(props.url, apiStore.params);
@@ -156,8 +156,8 @@ export default {
 
     const generateAppointmentHours = () => {
       const hours = [];
-      const startTime = 9 * 60; // In minuti (09:00)
-      const endTime = 18 * 60; // In minuti (18:00)
+      const startTime = 9 * 60; // (09:00)
+      const endTime = 20 * 60; // (20:00)
       const interval = 15;
 
       for (let time = startTime; time <= endTime; time += interval) {
@@ -168,7 +168,7 @@ export default {
           .padStart(2, "0")}:${minutesPart.toString().padStart(2, "0")}`;
         hours.push({ orarioAppuntamento: formattedTime });
       }
-      console.log("hours", hours);
+      //console.log("hours", hours);
       return hours;
     };
 
