@@ -73,7 +73,9 @@
                 " - idLista: " +
                 selectedConversation.idLista +
                 " - nominativo: " +
-                selectedConversation.nominativo
+                selectedConversation.nominativo +
+                " - idCampagna: " +
+                selectedConversation.idCampagna
               }}
             </h2>
           </div>
@@ -438,6 +440,11 @@ export default {
         return acc;
       }, {});
 
+      const idCampagnaLookup = idListe.reduce((acc, item) => {
+        acc[item.friendlyName] = item.idCampagna;
+        return acc;
+      }, {});
+
       // console.log("nominativolookup", nominativoLookup);
       // console.log("statolookup", statoLookup);
 
@@ -472,6 +479,8 @@ export default {
             nominativoLookup[conversation.friendlyName] || null;
           conversation.stato = statoLookup[conversation.friendlyName]; //levato || null perchè lo 0 lo faceva diventare null
           conversation.esito = esitoLookup[conversation.friendlyName] || null;
+          conversation.idCampagna =
+            idCampagnaLookup[conversation.friendlyName] || null;
 
           return conversation;
         })

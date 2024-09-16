@@ -15,6 +15,13 @@
           placeholder="Inserire idLista"
           v-model="state.idLista"
           class="w-full" />
+
+        <InputText
+          type="hidden"
+          id="idCampagna"
+          name="idCampagna"
+          v-model="state.idCampagna"
+          class="w-full" />
       </div>
 
       <div class="mt-0">
@@ -105,6 +112,7 @@ export default {
 
     const state = reactive({
       // lead_status_id: formStore.data != null ? formStore.data.id : null,
+      idCampagna: formStore.data != null ? formStore.data.idCampagna : null,
       idLista: formStore.data != null ? formStore.data.idLista : null,
       login: formStore.data != null ? formStore.data.login : null,
       dataAppuntamento:
