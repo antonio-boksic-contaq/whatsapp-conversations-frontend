@@ -92,7 +92,12 @@ import { formatDateForMsg } from "@/utils/date.js";
 
 export default {
   name: "ConversationsList",
-  props: ["conversations", "selectedConversation", "identity"],
+  props: [
+    "conversations",
+    "selectedConversation",
+    "identity",
+    "selectedFilterTypes",
+  ],
   emits: ["conversationSelected", "getConvs"],
   setup(props, context) {
     const filter = ref("");
@@ -118,11 +123,9 @@ export default {
     };
 
     const filteredConversations = computed(() => {
-      if (!filter.value) {
-        return props.conversations;
-      }
-      return props.conversations.filter(
-        (conversation) =>
+      return props.conversations.filter((conversation) => {
+        const matchesInputFilter =
+          !filter.value ||
           conversation.friendlyName
             ?.toLowerCase()
             .includes(filter.value.toLowerCase()) ||
@@ -131,8 +134,48 @@ export default {
             .includes(filter.value.toLowerCase()) ||
           conversation.nominativo
             ?.toLowerCase()
-            .includes(filter.value.toLowerCase()) // Aggiunto il controllo per nominativo
-      );
+            .includes(filter.value.toLowerCase());
+
+        const activeTypes = Object.keys(props.selectedFilterTypes).filter(
+          (key) => props.selectedFilterTypes[key]
+        );
+
+        //console.log("activeTypes", activeTypes); //aperta, appuntamento, chiusa, scaduta
+
+        const isOpen =
+          conversation.stato === 0 &&
+          conversation.esito !== "APPUNTAMENTO" &&
+          !isOlderThan24Hours(conversation) &&
+          activeTypes.includes("aperta");
+        const isClosed =
+          conversation.stato === 1 && activeTypes.includes("chiusa");
+        const isExpired =
+          isOlderThan24Hours(conversation) &&
+          conversation.stato !== 1 &&
+          conversation.esito !== "APPUNTAMENTO" &&
+          activeTypes.includes("scaduta");
+        const isAppointment =
+          conversation.esito === "APPUNTAMENTO" &&
+          activeTypes.includes("appuntamento");
+
+        // Verifica se la conversazione soddisfa tutti i filtri attivi
+        const matchesActiveTypes = activeTypes.some((filter) => {
+          switch (filter) {
+            case "aperta":
+              return isOpen;
+            case "appuntamento":
+              return isAppointment;
+            case "scaduta":
+              return isExpired;
+            case "chiusa":
+              return isClosed;
+            default:
+              return false;
+          }
+        });
+
+        return matchesInputFilter && matchesActiveTypes;
+      });
     });
 
     // questa viene chiamata da ogni conversazione e gestisce il pallino della notifica

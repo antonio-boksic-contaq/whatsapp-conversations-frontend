@@ -30,28 +30,46 @@
           :identity="identity"
           :selectedConversation="selectedConversation"
           @conversationSelected="selectConversation"
-          @getConvs="getConversations">
+          @getConvs="getConversations"
+          :selectedFilterTypes="selectedFilterTypes">
         </conversations-list>
       </div>
 
-      <!-- Legenda-->
+      <!-- Legenda / filtro -->
       <div class="p-4 mb-2 rounded-xl border border-gray-400 bg-gray-300 mt-2">
-        <div class="text-center">Legenda colori conversazioni:</div>
+        <div class="text-center">Legenda e filtro conversazioni:</div>
         <div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
           <div
-            class="bg-gray-300 border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            @click="setFilterType('aperta')"
+            class="bg-gray-300 border-2 border-gray-400 text-black p-2 rounded-xl text-center truncate cursor-pointer"
+            :class="{
+              'font-bold underline border-black': selectedFilterTypes.aperta,
+            }">
             aperta
           </div>
           <div
-            class="appointment-conv border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            @click="setFilterType('appuntamento')"
+            class="appointment-conv border-2 border-gray-400 text-black p-2 rounded-xl text-center truncate cursor-pointer"
+            :class="{
+              'font-bold underline border-black':
+                selectedFilterTypes.appuntamento,
+            }">
             appuntamento
           </div>
           <div
-            class="expired-conv border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            @click="setFilterType('scaduta')"
+            class="expired-conv border-2 border-gray-400 text-black p-2 rounded-xl text-center truncate cursor-pointer"
+            :class="{
+              'font-bold underline border-black': selectedFilterTypes.scaduta,
+            }">
             scaduta
           </div>
           <div
-            class="closed-conv border border-gray-400 text-black p-2 rounded-xl text-center truncate">
+            @click="setFilterType('chiusa')"
+            class="closed-conv border-2 border-gray-400 text-black p-2 rounded-xl text-center truncate cursor-pointer"
+            :class="{
+              'font-bold underline border-black': selectedFilterTypes.chiusa,
+            }">
             chiusa
           </div>
         </div>
@@ -527,6 +545,18 @@ export default {
       confirmStore.open(conversation, "non-interessato", "bo", itemText);
     };
 
+    const selectedFilterTypes = ref({
+      aperta: true,
+      appuntamento: false,
+      scaduta: false,
+      chiusa: false,
+    });
+
+    const setFilterType = (type) => {
+      selectedFilterTypes.value[type] = !selectedFilterTypes.value[type];
+      console.log("ciaone", selectedFilterTypes.value);
+    };
+
     return {
       conversations,
       selectedConversation,
@@ -548,6 +578,8 @@ export default {
       loggedInParticipant,
       openModal,
       openConfirm,
+      selectedFilterTypes,
+      setFilterType,
     };
   },
 };
