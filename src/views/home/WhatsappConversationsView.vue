@@ -219,6 +219,7 @@ import { useModalStore } from "@/store/modals";
 import { useFormStore } from "@/store/forms";
 import { useConfirmStore } from "@/store/confirms";
 import Confirm from "@/components/shared/Confirm.vue";
+import axios from "axios";
 
 export default {
   name: "WhatsappConversationsView",
@@ -305,7 +306,10 @@ export default {
       //console.log("emit chiama getconversations------------------------");
       //ottengo conversazioni non ordinate e a cui mancano dati, e ne ricevo solo 50 con getSubscrivedConversations(), quindi ho dovuto aggiungere logica del paginator
       let convs = { items: [] }; // mantengo  la struttura convs.items come era prima di implementare paginator
+      //console.log("ciaone");
       let paginator = await client.value.getSubscribedConversations();
+
+      // console.log("paginator", paginator);
 
       // Aggiungi le prime conversazioni a convs.items
       convs.items.push(...paginator.items);
@@ -354,14 +358,30 @@ export default {
       });
     };
 
+    // const getInternalDataForConvs = async (friendlyNamesArray) => {
+    //   const params = { friendlyNames: friendlyNamesArray.join(",") };
+
+    //   const url = process.env.VUE_APP_API_URL + "/get-data-for-convs";
+
+    //   const response = await apiStore.fetch(url, params);
+    //   console.log("response", response);
+    //   return response;
+    // };
+
     const getInternalDataForConvs = async (friendlyNamesArray) => {
-      const params = { friendlyNames: friendlyNamesArray.join(",") };
+      const url = `${process.env.VUE_APP_API_URL}/get-data-for-convs`;
 
-      const url = process.env.VUE_APP_API_URL + "/get-data-for-convs";
+      const response = await axios.post(url, {
+        friendlyNames: friendlyNamesArray,
+      });
 
-      const response = await apiStore.fetch(url, params);
-      console.log("response", response);
-      return response;
+      console.log("RESPONSEEE1.data", response.data);
+
+      // const response2 = Object.values(response);
+
+      // console.log("RESPONSE", response2);
+
+      return response.data;
     };
 
     // const deleteItem = (rowItem, itemText = null) => {
