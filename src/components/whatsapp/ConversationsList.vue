@@ -123,58 +123,80 @@ export default {
     };
 
     const filteredConversations = computed(() => {
-      return props.conversations.filter((conversation) => {
-        const matchesInputFilter =
-          !filter.value ||
-          conversation.friendlyName
-            ?.toLowerCase()
-            .includes(filter.value.toLowerCase()) ||
-          conversation.idLista
-            ?.toString()
-            .includes(filter.value.toLowerCase()) ||
-          conversation.nominativo
-            ?.toLowerCase()
-            .includes(filter.value.toLowerCase());
+      // aggiunto questo console log di conversationsWithoutMessages per capire quali conversazioni mi danno errore
+      const conversationsWithoutMessages = [];
 
-        const activeTypes = Object.keys(props.selectedFilterTypes).filter(
-          (key) => props.selectedFilterTypes[key]
-        );
+      props.conversations.forEach((conversation) => {
+        if (!conversation.messages || conversation.messages.length === 0) {
+          conversationsWithoutMessages.push(conversation);
+        }
+      });
 
-        //console.log("activeTypes", activeTypes); //aperta, appuntamento, chiusa, scaduta
+      console.log(
+        "queste conversazioni hanno 0 messaggi, c'è stato un errore da qualche parte, da studiare perchè succede",
+        conversationsWithoutMessages
+      );
 
-        const isOpen =
-          conversation.stato === 0 &&
-          conversation.esito !== "APPUNTAMENTO" &&
-          !isOlderThan24Hours(conversation) &&
-          activeTypes.includes("aperta");
-        const isClosed =
-          conversation.stato === 1 && activeTypes.includes("chiusa");
-        const isExpired =
-          isOlderThan24Hours(conversation) &&
-          conversation.stato !== 1 &&
-          conversation.esito !== "APPUNTAMENTO" &&
-          activeTypes.includes("scaduta");
-        const isAppointment =
-          conversation.esito === "APPUNTAMENTO" &&
-          activeTypes.includes("appuntamento");
+      const conversationsToRender = props.conversations.filter(
+        (conversation) => {
+          const matchesInputFilter =
+            !filter.value ||
+            conversation.friendlyName
+              ?.toLowerCase()
+              .includes(filter.value.toLowerCase()) ||
+            conversation.idLista
+              ?.toString()
+              .includes(filter.value.toLowerCase()) ||
+            conversation.nominativo
+              ?.toLowerCase()
+              .includes(filter.value.toLowerCase());
 
-        // Verifica se la conversazione soddisfa tutti i filtri attivi
-        const matchesActiveTypes = activeTypes.some((filter) => {
-          switch (filter) {
-            case "aperta":
-              return isOpen;
-            case "appuntamento":
-              return isAppointment;
-            case "scaduta":
-              return isExpired;
-            case "chiusa":
-              return isClosed;
-            default:
-              return false;
-          }
-        });
+          const activeTypes = Object.keys(props.selectedFilterTypes).filter(
+            (key) => props.selectedFilterTypes[key]
+          );
 
-        return matchesInputFilter && matchesActiveTypes;
+          //console.log("activeTypes", activeTypes); //aperta, appuntamento, chiusa, scaduta
+
+          const isOpen =
+            conversation.stato === 0 &&
+            conversation.esito !== "APPUNTAMENTO" &&
+            !isOlderThan24Hours(conversation) &&
+            activeTypes.includes("aperta");
+          const isClosed =
+            conversation.stato === 1 && activeTypes.includes("chiusa");
+          const isExpired =
+            isOlderThan24Hours(conversation) &&
+            conversation.stato !== 1 &&
+            conversation.esito !== "APPUNTAMENTO" &&
+            activeTypes.includes("scaduta");
+          const isAppointment =
+            conversation.esito === "APPUNTAMENTO" &&
+            activeTypes.includes("appuntamento");
+
+          // Verifica se la conversazione soddisfa tutti i filtri attivi
+          const matchesActiveTypes = activeTypes.some((filter) => {
+            switch (filter) {
+              case "aperta":
+                return isOpen;
+              case "appuntamento":
+                return isAppointment;
+              case "scaduta":
+                return isExpired;
+              case "chiusa":
+                return isClosed;
+              default:
+                return false;
+            }
+          });
+
+          return matchesInputFilter && matchesActiveTypes;
+        }
+      );
+
+      // ritorno solo conversazioni che hanno proprietà messages e che non sia un array vuoto
+      // non so come mi si verificano questi casi, da capire
+      return conversationsToRender.filter((conversation) => {
+        return conversation.messages && conversation.messages.length > 0;
       });
     });
 
